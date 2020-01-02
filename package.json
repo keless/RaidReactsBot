@@ -1,0 +1,11 @@
+{
+  "name": "raid-reacts-bot",
+  "version": "1.0.0",
+  "description": "Copy Raid Invite Reactions",
+  "main": "raidreactsbot.js",
+  "author": "Paul Zirkle",
+  "dependencies": {
+    "eris": "^0.11.1",
+    "winston": "^3.2.1"
+  }
+}
