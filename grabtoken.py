@@ -56,7 +56,7 @@ def get_secret():
         else:
             decoded_binary_secret = base64.b64decode(get_secret_value_response['SecretBinary'])
 
-    open('auth.json', 'rb').write(decoded_binary_secret)
+    open('auth.json', 'wb').write(secret)
 
 if __name__ == '__main__':
     get_secret()
