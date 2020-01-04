@@ -16,7 +16,16 @@ bot.on('ready', function (evt) {
 });
 
 var emote_map = {
-  "❤️" : "Healer", //❤️
+  ":dagger:" : "Melee",
+  ":dagger_knife:" : "Melee",
+  ":crossed_swords:" : "Melee",
+  ":shield:" : "Tank",
+  ":hearts:" : "Healer",
+  ":man_mage:" : "Ranged",
+  ":woman_mage:" : "Ranged",
+  ":mage:" : "Ranged",
+  "♥️" : "Healer",
+  "❤️" : "Healer",
   "🛡️" : "Tank",
   "⚔️" : "Melee",
   "🧙" : "Ranged",
@@ -28,6 +37,8 @@ bot.on('messageCreate', function (message) {
   // Our bot needs to know if it will execute a command
   // It will listen for messages that will start with `!`
   var channelID = message.channel.id
+  var guild = message.channel.guild
+
   if (message.content.substring(0, 1) == '!') {
     var args = message.content.substring(1).split(' ');
     var cmd = args[0];
@@ -84,8 +95,14 @@ bot.on('messageCreate', function (message) {
                   reactPeople[result.emote] = result.users
                   for (var user of result.users) {
                     var role = emote_map[result.emote]
-                    logger.info("user: " + user.username + " role: " + role )
-                    strResult += user.username + " " + role + "\n"
+                    var member = guild.members.find((member, idx, obj)=>{
+                      return member.user.id == user.id;
+                    })
+                    var nickname = member.nick
+                    logger.info("user: " + user.username + " role: " + role + " nick: " + nickname )
+
+                    var charName = nickname || user.username
+                    strResult += charName + " " + role + "\n"
                   }
                 }
 
