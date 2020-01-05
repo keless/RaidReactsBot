@@ -1,0 +1,15 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      docker: 18
+  build:
+    commands:
+      - docker build -t raid-reacts-bot:latest .
+      - docker save -o raid-reacts-bot-image.tar.gz raid-reacts-bot:latest
+artifacts:
+  files:
+    - raid-reacts-bot-image.tar.gz
+  name: raid-reacts-bot-tar
+ 
