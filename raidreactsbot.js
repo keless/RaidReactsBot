@@ -38,6 +38,7 @@ bot.on('messageCreate', function (message) {
   // It will listen for messages that will start with `!`
   var channelID = message.channel.id
   var guild = message.channel.guild
+  var cmdUser = message.author
 
   if (message.content.substring(0, 1) == '!') {
     var args = message.content.substring(1).split(' ');
@@ -46,7 +47,16 @@ bot.on('messageCreate', function (message) {
     args = args.splice(1);
     switch(cmd) {
       case 'ping':
-        bot.createMessage(channelID, 'Pong!').catch((error)=> { logger.error(error) });
+        // public response:
+        //bot.createMessage(channelID, 'Pong!').catch((error)=> { logger.error(error) });
+
+        // private response:
+        cmdUser.getDMChannel().then((dmChannel)=>{
+          dmChannel.createMessage('Pong!').then(()=>{
+            logger.info("sent pong response")
+            message.delete("bot responded")
+          }).catch(logCatch);
+        }).catch(logCatch)
       break;
       case 'copy':
         var searchString = args.join(' ')
@@ -108,7 +118,16 @@ bot.on('messageCreate', function (message) {
 
                 // we have all results now, map emojis to roles
                 logger.info("send message '" + strResult + "'")
-                bot.createMessage(channelID, strResult).catch(logCatch);
+                // public response: 
+                //bot.createMessage(channelID, strResult).catch(logCatch);
+
+                // private response:
+                cmdUser.getDMChannel().then((dmChannel)=>{
+                  dmChannel.createMessage(strResult).then(()=>{
+                    logger.info("sent copy response")
+                    message.delete("bot responded")
+                  }).catch(logCatch);
+                }).catch(logCatch)
 
               }).catch((err)=>{
                 logger.error("error while processing Promise.all " + err)
