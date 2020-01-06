@@ -99,6 +99,7 @@ bot.on('messageCreate', function (message) {
                 promiseArr.push(reactPromise)
               }
               Promise.all(promiseArr).then((promiseValues)=>{
+                var strResult = "!copy " + args + "\n"
 
                 for (var result of promiseValues) {
                   reactPeople[result.emote] = result.users
