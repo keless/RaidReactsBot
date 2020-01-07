@@ -1,3 +1,4 @@
+var fs = require('fs'); // for installing custom emojis to server
 var Eris = require('eris');
 var logger = require('winston');
 var auth = require('./auth.json');
@@ -17,6 +18,25 @@ bot.on('ready', function (evt) {
     logger.info(bot.user.username + ' - (' + bot.user.id + ')');
 });
 
+// coresponds to reacts/signup_<name>.png
+var custom_emojis = [
+  "prot_war",
+  "dps_war",
+  "rogue",
+  "hunter",
+  "mage",
+  "warlock",
+  "priest_heals",
+  "shadow",
+  "prot_pali",
+  "holy_pali",
+  "ret",
+  "resto",
+  "bear",
+  "cat",
+  "boomkin"
+]
+
 var emote_map = {
   ":dagger:" : "Melee",
   ":dagger_knife:" : "Melee",
@@ -34,7 +54,9 @@ var emote_map = {
   "🏹" : "Ranged"
 };
 
-var logCatch = function (error) { logger.error(error) }
+var logCatch = function (error) {
+  logger.error(error.message || error) 
+}
 
 var processCopy = function (message, channelID, cmdUser, args) {
   var guild = message.channel.guild
@@ -125,7 +147,18 @@ var processCopy = function (message, channelID, cmdUser, args) {
 
 
 
-
+function base64_encode(file) {
+  // read binary data
+  var bitmap = fs.readFileSync(file);
+  // convert binary data to base64 encoded string
+  return Buffer.from(bitmap).toString('base64');
+}
+var installEmojis = function (guild) {
+  for (var emoji of custom_emojis) {
+    var base64str = base64_encode("reacts/signup_" + emoji + ".png")
+    guild.createEmoji({ name: emoji, image: "data:image/png;base64," + base64str }).catch(logCatch)
+  }
+}
 
 var processCreate = function (message, channelID, cmdUser, args) {
   var eventTitle = args.join(' ')
@@ -169,6 +202,13 @@ bot.on('messageCreate', function (message) {
           break;
         }
         processCopy(message, channelID, cmdUser, args)
+      break;
+      case 'installEmojis':
+        if (isPrivateMessage) {
+          break;
+        }
+        // NOTE: this _will_ install duplicates if called more than once (which eats up max emoji count for your server)
+        installEmojis(message.channel.guild)
       break;
       case 'create':
         if (isPrivateMessage) {
