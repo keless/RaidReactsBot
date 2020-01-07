@@ -166,9 +166,15 @@ var processCreate = function (message, channelID, cmdUser, args) {
   var raidEvent = new RaidEvent(eventTitle)
   var embed = raidEvent.renderToEmbed()
 
-  bot.createMessage(channelID, { embed: embed }).then(()=>{
-    logger.info("todo: add emojis")
-    //xxx todo: add role emojis
+  var guild = message.channel.guild
+  var guildEmojis = guild.emojis
+
+  bot.createMessage(channelID, { embed: embed }).then((raidEventMessage)=>{
+    // set up the example emojis
+    for (var emoji of custom_emojis) {
+      var customEmoji = guildEmojis.find((gEmo)=>{ return gEmo.name == emoji})
+      raidEventMessage.addReaction(customEmoji.name + ":" + customEmoji.id).catch(logCatch)
+    }
   }).catch(logCatch);
 }
 
@@ -219,5 +225,31 @@ bot.on('messageCreate', function (message) {
     }
   }
 });
+
+bot.on('messageReactionAdd', (partialMessageData, emojiObj, userID) => {
+  var channelID = partialMessageData.channel.id
+  var messageID = partialMessageData.id
+
+  bot.getMessage(channelID, messageID).then((message)=>{
+    if (message.author != bot.user || message.embeds.length == 0) {
+      return // not our message, or not a raid event
+    }
+
+    logger.info("got react for " + message.embeds[0].title)
+  }).catch(logCatch)
+})
+
+bot.on('messageReactionRemove', (partialMessageData, emojiObj, userID) => {
+  var channelID = partialMessageData.channel.id
+  var messageID = partialMessageData.id
+
+  bot.getMessage(channelID, messageID).then((message)=>{
+    if (message.author != bot.user || message.embeds.length == 0) {
+      return // not our message, or not a raid event
+    }
+
+    logger.info("removed react for " + message.embeds[0].title)
+  }).catch(logCatch)
+})
 
 bot.connect()

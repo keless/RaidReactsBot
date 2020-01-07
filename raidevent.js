@@ -12,7 +12,6 @@ class RaidEvent {
   }
 
   renderToEmbed() {
-
     var embed = {}
     embed.title = this.title
     embed.thumbnail = { url:"https://steamuserimages-a.akamaihd.net/ugc/911298000368936052/7A367C1BBFACE797C39275EC4A67F96CD637D0DE/" } //onyxia icon
@@ -22,7 +21,7 @@ class RaidEvent {
     embed.fields = []
 
     var totalSignUps = this.tanks.length + this.healers.length + this.ranged.length + this.melee.length
-    embed.fields.push({ name: "#", value: "" + totalSignUps, inline: true})
+    embed.fields.push({ name: "**Total**", value: "" + totalSignUps, inline: true})
 
     return embed
   }
