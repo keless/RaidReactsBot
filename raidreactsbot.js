@@ -1,4 +1,3 @@
-var fs = require('fs'); // for installing custom emojis to server
 var Eris = require('eris');
 var logger = require('winston');
 var auth = require('./auth.json');
@@ -18,24 +17,6 @@ bot.on('ready', function (evt) {
     logger.info(bot.user.username + ' - (' + bot.user.id + ')');
 });
 
-// coresponds to reacts/signup_<name>.png
-var custom_emojis = [
-  "prot_war",
-  "dps_war",
-  "rogue",
-  "hunter",
-  "mage",
-  "warlock",
-  "priest_heals",
-  "shadow",
-  "prot_pali",
-  "holy_pali",
-  "ret",
-  "resto",
-  "bear",
-  "cat",
-  "boomkin"
-]
 
 var emote_map = {
   ":dagger:" : "Melee",
@@ -145,21 +126,6 @@ var processCopy = function (message, channelID, cmdUser, args) {
   }).catch(logCatch); // cmdUser.getDMChannel
 }
 
-
-
-function base64_encode(file) {
-  // read binary data
-  var bitmap = fs.readFileSync(file);
-  // convert binary data to base64 encoded string
-  return Buffer.from(bitmap).toString('base64');
-}
-var installEmojis = function (guild) {
-  for (var emoji of custom_emojis) {
-    var base64str = base64_encode("reacts/signup_" + emoji + ".png")
-    guild.createEmoji({ name: emoji, image: "data:image/png;base64," + base64str }).catch(logCatch)
-  }
-}
-
 var processCreate = function (message, channelID, cmdUser, args) {
   var eventTitle = args.join(' ')
 
@@ -170,8 +136,9 @@ var processCreate = function (message, channelID, cmdUser, args) {
   var guildEmojis = guild.emojis
 
   bot.createMessage(channelID, { embed: embed }).then((raidEventMessage)=>{
+    //xxx TODO: move add reactions into raidevent.js
     // set up the example emojis
-    for (var emoji of custom_emojis) {
+    for (var emoji of RaidEvent.custom_emojis) {
       var customEmoji = guildEmojis.find((gEmo)=>{ return gEmo.name == emoji})
       raidEventMessage.addReaction(customEmoji.name + ":" + customEmoji.id).catch(logCatch)
     }
@@ -214,7 +181,7 @@ bot.on('messageCreate', function (message) {
           break;
         }
         // NOTE: this _will_ install duplicates if called more than once (which eats up max emoji count for your server)
-        installEmojis(message.channel.guild)
+        RaidEvent.InstallEmojis(message.channel.guild)
       break;
       case 'create':
         if (isPrivateMessage) {
@@ -236,6 +203,11 @@ bot.on('messageReactionAdd', (partialMessageData, emojiObj, userID) => {
     }
 
     logger.info("got react for " + message.embeds[0].title)
+
+    var raidEmbed = message.embeds[0]
+    var raidEvent = new RaidEvent()
+    raidEvent.parseFromEmbed(raidEmbed)
+
   }).catch(logCatch)
 })
 
@@ -249,6 +221,10 @@ bot.on('messageReactionRemove', (partialMessageData, emojiObj, userID) => {
     }
 
     logger.info("removed react for " + message.embeds[0].title)
+
+    var raidEmbed = message.embeds[0]
+    var raidEvent = new RaidEvent()
+    raidEvent.parseFromEmbed(raidEmbed)
   }).catch(logCatch)
 })
 
