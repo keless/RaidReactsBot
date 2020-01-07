@@ -1,6 +1,8 @@
 var Eris = require('eris');
 var logger = require('winston');
 var auth = require('./auth.json');
+var RaidEvent = require('./raidevent.js').RaidEvent;
+
 // Configure logger settings
 logger.remove(logger.transports.Console);
 logger.add(new logger.transports.Console, {
@@ -34,7 +36,7 @@ var emote_map = {
 
 var logCatch = function (error) { logger.error(error) }
 
-var processCopy = function(message, channelID, cmdUser, args) {
+var processCopy = function (message, channelID, cmdUser, args) {
   var guild = message.channel.guild
 
   var searchString = args.join(' ')
@@ -121,6 +123,22 @@ var processCopy = function(message, channelID, cmdUser, args) {
   }).catch(logCatch); // cmdUser.getDMChannel
 }
 
+
+
+
+
+var processCreate = function (message, channelID, cmdUser, args) {
+  var eventTitle = args.join(' ')
+
+  var raidEvent = new RaidEvent(eventTitle)
+  var embed = raidEvent.renderToEmbed()
+
+  bot.createMessage(channelID, { embed: embed }).then(()=>{
+    logger.info("todo: add emojis")
+    //xxx todo: add role emojis
+  }).catch(logCatch);
+}
+
 bot.on('messageCreate', function (message) {
   // Our bot needs to know if it will execute a command
   // It will listen for messages that will start with `!`
@@ -151,6 +169,12 @@ bot.on('messageCreate', function (message) {
           break;
         }
         processCopy(message, channelID, cmdUser, args)
+      break;
+      case 'create':
+        if (isPrivateMessage) {
+          break;
+        }
+        processCreate(message, channelID, cmdUser, args)
       break;
     }
   }
