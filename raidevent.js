@@ -16,6 +16,7 @@ class RaidEvent {
   constructor(guild, title) {
     this.guild = guild
     this.title = title
+    this.message = null
     this.signups = {} // dictionary< custom_emoji : array< username > >
 
     for (var role of RaidEvent.custom_emojis) {
@@ -40,8 +41,9 @@ class RaidEvent {
     this.signups["shadow"] = ["Goldlining"]
   }
 
-  parseFromEmbed(embed) {
+  parseFromEmbed(embed, message) {
     this.title = embed.title
+    this.message = message
 
     var firstFieldIdx = 5
     for (var i = firstFieldIdx; i < embed.fields.length; i++) {
@@ -159,11 +161,48 @@ class RaidEvent {
   }
 
   handleAddedReact(emoji, user) {
-    //xxx todo
-  }
+    if (!this.message) {
+      console.log("por que no tengo message?")
+      return // cant update embed if we dont know what message it is on (this shouldnt happen)
+    }
+    if (!RaidEvent.custom_emojis.includes(emoji.name)) {
+      console.log("ignoring invalid react " + emoji.name)
+      return // ignore unknown react 
+    }
 
-  handleRemovedReact(emoji, user) {
-    //xxx todo
+    // get guild nickname if applicable
+    var member = this.guild.members.find((member, idx, obj) => {
+      return member.user.id == user.id;
+    })
+    var nickname = member.nick
+    var charName = nickname || user.username
+
+    // ensure charName is not already signed up anywhere
+    var unsignup = false
+    var all = this.getGroupedSignups()
+    for (var role of RaidEvent.custom_emojis) {
+      if (this.signups[role].includes(charName)) {
+        if (role == emoji.name) {
+          // interpret action as removing signup
+          unsignup = true
+        }
+
+        //remove from role
+        var idx = this.signups[role].indexOf(charName)
+        if (idx != -1) {
+          this.signups[role].splice(idx, 1);
+        }
+      }
+    }
+
+    if (!unsignup) {
+      // add char name to signups for role
+      console.log("add " + charName + " for role " + emoji.name)
+      this.signups[emoji.name].push(charName)
+    }
+
+    // update embed
+    this.message.edit({ embed: this.renderToEmbed()}).catch(logCatch)
   }
 
   sendRosterToUser(user) {

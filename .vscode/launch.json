@@ -10,7 +10,6 @@
       "name": "node",
       "runtimeExecutable": "node",
       "program": "${workspaceFolder}/raidreactsbot.js",
-      "runtimeArgs": ["--experimental-modules"],
       "restart": true,
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
@@ -21,7 +20,6 @@
       "name": "nodemon",
       "runtimeExecutable": "nodemon",
       "program": "${workspaceFolder}/raidreactsbot.js",
-      "runtimeArgs": ["--experimental-modules"],
       "restart": true,
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"

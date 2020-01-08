@@ -105,7 +105,7 @@ bot.on('messageReactionAdd', (partialMessageData, emojiObj, userID) => {
 
     var raidEmbed = message.embeds[0]
     var raidEvent = new RaidEvent(guild)
-    raidEvent.parseFromEmbed(raidEmbed)
+    raidEvent.parseFromEmbed(raidEmbed, message)
 
     if (emojiObj.name == "🦎") {
       // get roster and send as private message
@@ -113,36 +113,10 @@ bot.on('messageReactionAdd', (partialMessageData, emojiObj, userID) => {
     } else {
       raidEvent.handleAddedReact(emojiObj, reactUser)
     }
-  }).catch(logCatch)
-})
 
-bot.on('messageReactionRemove', (partialMessageData, emojiObj, userID) => {
-  var channelID = partialMessageData.channel.id
-  var messageID = partialMessageData.id
+    // now reset the react (remove the userID's react)
+    message.removeReaction(emojiObj.name +":"+emojiObj.id, userID)
 
-  bot.getMessage(channelID, messageID).then((message)=>{
-    if (message.author != bot.user || message.embeds.length == 0) {
-      return // not our message, or not a raid event
-    }
-    if (userID == bot.user.id) {
-      return // dont listen to reacts the bot sets
-    }
-
-    var reactUser = bot.users.get(userID)
-    var guild = message.channel.guild
-
-    logger.info("removed react "+ emojiObj.name +" for " + message.embeds[0].title)
-
-    var raidEmbed = message.embeds[0]
-    var raidEvent = new RaidEvent(guild)
-    raidEvent.parseFromEmbed(raidEmbed)
-
-    if (emojiObj.name == "🦎") {
-      // get roster and send as private message
-      raidEvent.sendRosterToUser(reactUser)
-    } else {
-      raidEvent.handleRemovedReact(emojiObj, reactUser)
-    }
   }).catch(logCatch)
 })
 
