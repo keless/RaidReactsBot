@@ -162,11 +162,11 @@ class RaidEvent {
 
   handleAddedReact(emoji, user) {
     if (!this.message) {
-      console.log("por que no tengo message?")
+      logger.error("por que no tengo message?")
       return // cant update embed if we dont know what message it is on (this shouldnt happen)
     }
     if (!RaidEvent.custom_emojis.includes(emoji.name)) {
-      console.log("ignoring invalid react " + emoji.name)
+      logger.error("ignoring invalid react " + emoji.name)
       return // ignore unknown react 
     }
 
@@ -197,7 +197,6 @@ class RaidEvent {
 
     if (!unsignup) {
       // add char name to signups for role
-      console.log("add " + charName + " for role " + emoji.name)
       this.signups[emoji.name].push(charName)
     }
 
@@ -221,10 +220,11 @@ class RaidEvent {
     var str = ""
     var list = this.signups[role]
 
+    var strClass = RaidEvent.classForRole[role]
     var strRole = RaidEvent.roleForEmoji[role]
 
     for( var user of list ) {
-      str += user + " " + strRole + "\n"
+      str += user + " " + strClass + " " + strRole + "\n"
     }
 
     return str
@@ -262,6 +262,24 @@ RaidEvent.custom_emojis = [
   "boomkin"
 ]
 
+RaidEvent.classForRole = {
+  "prot_war": "Warrior",
+  "dps_war": "Warrior",
+  "rogue": "Rogue",
+  "hunter": "Hunter",
+  "mage": "Mage",
+  "warlock": "Warlock",
+  "priest_heals": "Priest",
+  "shadow": "Priest",
+  "prot_pali": "Paladin",
+  "holy_pali": "Paladin",
+  "ret": "Paladin",
+  "resto": "Druid",
+  "bear": "Druid",
+  "cat": "Druid",
+  "boomkin": "Druid"
+}
+
 RaidEvent.roleForEmoji = {
   "prot_war": "Tank",
   "dps_war": "Melee",
@@ -296,25 +314,6 @@ RaidEvent.roleToNiceName = {
   "bear": "Bear Tanks",
   "cat": "kittehIs4fite",
   "boomkin": "Boomkins"
-}
-
-//xxx remove this?
-RaidEvent.niceNameToRole = {
-  "Prot Warriors": "prot_war",
-  "Arms/Fury": "dps_war",
-  "Rogues": "rogue",
-  "Huntars": "hunter",
-  "Mages": "mage",
-  "Warlocks": "warlock",
-  "Priests": "priest_heals",
-  "S. Priest": "shadow",
-  "Prot Palis": "prot_pali",
-  "Holy Palis": "holy_pali",
-  "Retadins": "ret",
-  "Tree Form": "resto",
-  "Bear Tanks": "bear",
-  "kittehIs4fite": "cat",
-  "Boomkins": "boomkin"
 }
 
 RaidEvent.addTemplateReactions = function (message, guild) {

@@ -101,7 +101,7 @@ bot.on('messageReactionAdd', (partialMessageData, emojiObj, userID) => {
     var reactUser = bot.users.get(userID)
     var guild = message.channel.guild
 
-    logger.info("got react " + emojiObj.name +" for " + message.embeds[0].title)
+    //logger.info("got react " + emojiObj.name +" for " + message.embeds[0].title)
 
     var raidEmbed = message.embeds[0]
     var raidEvent = new RaidEvent(guild)
@@ -110,13 +110,13 @@ bot.on('messageReactionAdd', (partialMessageData, emojiObj, userID) => {
     if (emojiObj.name == "🦎") {
       // get roster and send as private message
       raidEvent.sendRosterToUser(reactUser)
+      // now reset the react (remove the userID's react)
+      message.removeReaction("🦎", userID)
     } else {
       raidEvent.handleAddedReact(emojiObj, reactUser)
+      // now reset the react (remove the userID's react)
+      message.removeReaction(emojiObj.name + ":" + emojiObj.id, userID)
     }
-
-    // now reset the react (remove the userID's react)
-    message.removeReaction(emojiObj.name +":"+emojiObj.id, userID)
-
   }).catch(logCatch)
 })
 
