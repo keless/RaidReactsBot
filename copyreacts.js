@@ -21,7 +21,7 @@ var logCatch = function (error) {
   logger.error(error.message || error)
 }
 
-var processCopy = function (message, channelID, cmdUser, args) {
+var processCopy = function (client, message, channelID, cmdUser, args) {
   var guild = message.channel.guild
 
   var searchString = args.join(' ')
@@ -29,7 +29,7 @@ var processCopy = function (message, channelID, cmdUser, args) {
   cmdUser.getDMChannel().then((dmChannel) => {
 
     // get messages in current channel
-    bot.getMessages(channelID).then((msgArr) => {
+    client.getMessages(channelID).then((msgArr) => {
       var foundMsg = null
       // search for the message we want
       for (var sMessage of msgArr) {
@@ -88,7 +88,7 @@ var processCopy = function (message, channelID, cmdUser, args) {
             // we have all results now, map emojis to roles
             logger.info("send message '" + strResult + "'")
             // public response: 
-            //bot.createMessage(channelID, strResult).catch(logCatch);
+            //client.createMessage(channelID, strResult).catch(logCatch);
 
             // private response:
             dmChannel.createMessage(strResult).catch(logCatch);
@@ -102,9 +102,9 @@ var processCopy = function (message, channelID, cmdUser, args) {
         logger.error("No message found for '" + searchString + "'")
         dmChannel.createMessage("No message found for '" + searchString + "'").catch(logCatch)
       }
-    }).catch(logCatch) // bot.getMessages
+    }).catch(logCatch) // client.getMessages
 
-    message.delete("bot processed command")
+    message.delete("processed command")
   }).catch(logCatch) // cmdUser.getDMChannel
 }
 

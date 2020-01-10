@@ -38,12 +38,90 @@ var processCreate = function (message, channelID, cmdUser, args) {
   }).catch(logCatch);
 }
 
+var getMemberForUserInGuild = function (guild, user) {
+  var member = guild.members.find((member, idx, obj) => {
+    return member.user.id == user.id;
+  })
+
+  return member
+}
+
+var getRoleIDForNameInGuild = function (guild, roleName) {
+  var role = guild.roles.find((roleObj)=>{
+    return roleObj.name == roleName
+  })
+
+  if (role) {
+    return role.id
+  }
+  return null
+}
+
+var processSet = function (cmdMessage, channelID, cmdUser, args) {
+  if (args.length < 3) {
+    // not enough arguments
+    cmdUser.getDMChannel().then((dmChannel) => {
+      dmChannel.createMessage("not enough params-  !add messageID name role").catch(logCatch)
+      cmdMessage.delete("send error response")
+    }).catch(logCatch)
+    return;
+  }
+
+  var raidEventMessageID = args[0];
+  var charName = args[1];
+  var emojiRole = args[2];
+
+  if (!RaidEvent.custom_emojis.includes(emojiRole)) {
+    cmdUser.getDMChannel().then((dmChannel) => {
+      dmChannel.createMessage("Invalid role: " + emojiRole + "\nSelect from: " + RaidEvent.custom_emojis.join(', ')).catch(logCatch)
+      cmdMessage.delete("send error response")
+    }).catch(logCatch)
+    return;
+  }
+
+  var channel = cmdMessage.channel
+  var guild = channel.guild
+  var member = getMemberForUserInGuild(guild, cmdUser)
+
+  // get botmaster roleID from guild
+
+  // authenticate user as botmaster before performing command
+  var isBotMaster = member.roles.includes(getRoleIDForNameInGuild(guild, "Botmaster"))
+  if (!isBotMaster) {
+    return;
+  }
+
+  // find embed for raidEventMessageID
+  bot.getMessage(channelID, raidEventMessageID).then((message)=>{
+    if (message.embeds.length <= 0) {
+      return Promise.reject("MessageID did not have embed")
+    }
+
+    var raidEmbed = message.embeds[0]
+    var raidEvent = new RaidEvent(guild)
+    raidEvent.parseFromEmbed(raidEmbed, message)
+    var added = raidEvent.performAdd(charName, emojiRole)
+
+    cmdUser.getDMChannel().then((dmChannel) => {
+      dmChannel.createMessage("" + (added ? "added " : "removed ") + charName + " as " + emojiRole).catch(logCatch)
+      cmdMessage.delete("handled message")
+    }).catch(logCatch)
+  }).catch((error) => {
+    // couldnt find the RaidEvent embed
+    cmdUser.getDMChannel().then((dmChannel) => {
+      dmChannel.createMessage("Could not find RaidEvent for MessageID " + raidEventMessageID + "\nMake sure you used the correct MessageID").catch(logCatch)
+      cmdMessage.delete("send error response")
+    }).catch(logCatch)
+  });
+}
+
 bot.on('messageCreate', function (message) {
   // Our bot needs to know if it will execute a command
   // It will listen for messages that will start with `!`
   var channelID = message.channel.id
   var isPrivateMessage = (message.channel.type == 1)
   var cmdUser = message.author
+  var isBotMaster = false;
 
   if (message.content.substring(0, 1) == '!') {
     var args = message.content.substring(1).split(' ');
@@ -67,7 +145,7 @@ bot.on('messageCreate', function (message) {
         if (isPrivateMessage) {
           break;
         }
-        processCopy(message, channelID, cmdUser, args)
+        processCopy(bot, message, channelID, cmdUser, args)
       break;
       case 'installEmojis':
         if (isPrivateMessage) {
@@ -81,6 +159,12 @@ bot.on('messageCreate', function (message) {
           break;
         }
         processCreate(message, channelID, cmdUser, args)
+      break;
+      case 'set':
+        if (isPrivateMessage) {
+          break;
+        }
+        processSet(message, channelID, cmdUser, args)
       break;
     }
   }

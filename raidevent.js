@@ -160,29 +160,14 @@ class RaidEvent {
     return { name: fieldName, value: fieldValue, inline: true}
   }
 
-  handleAddedReact(emoji, user) {
-    if (!this.message) {
-      logger.error("por que no tengo message?")
-      return // cant update embed if we dont know what message it is on (this shouldnt happen)
-    }
-    if (!RaidEvent.custom_emojis.includes(emoji.name)) {
-      logger.error("ignoring invalid react " + emoji.name)
-      return // ignore unknown react 
-    }
-
-    // get guild nickname if applicable
-    var member = this.guild.members.find((member, idx, obj) => {
-      return member.user.id == user.id;
-    })
-    var nickname = member.nick
-    var charName = nickname || user.username
-
+  // returns true if user was added, false if removed
+  performAdd(charName, emojiRole) {
     // ensure charName is not already signed up anywhere
     var unsignup = false
     var all = this.getGroupedSignups()
     for (var role of RaidEvent.custom_emojis) {
       if (this.signups[role].includes(charName)) {
-        if (role == emoji.name) {
+        if (role == emojiRole) {
           // interpret action as removing signup
           unsignup = true
         }
@@ -197,11 +182,33 @@ class RaidEvent {
 
     if (!unsignup) {
       // add char name to signups for role
-      this.signups[emoji.name].push(charName)
+      this.signups[emojiRole].push(charName)
     }
 
     // update embed
-    this.message.edit({ embed: this.renderToEmbed()}).catch(logCatch)
+    this.message.edit({ embed: this.renderToEmbed() }).catch(logCatch)
+
+    return !unsignup
+  }
+
+  handleAddedReact(emoji, user) {
+    if (!this.message) {
+      logger.error("por que no tengo message?")
+      return // cant update embed if we dont know what message it is on (this shouldnt happen)
+    }
+    if (!RaidEvent.custom_emojis.includes(emoji.name)) {
+      logger.error("ignoring invalid react " + emoji.name)
+      return // ignore unknown react
+    }
+
+    // get guild nickname if applicable
+    var member = this.guild.members.find((member, idx, obj) => {
+      return member.user.id == user.id;
+    })
+    var nickname = member.nick
+    var charName = nickname || user.username
+
+    this.performAdd(charName, emoji.name)
   }
 
   sendRosterToUser(user) {
