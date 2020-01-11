@@ -2,6 +2,7 @@ var Eris = require('eris');
 var logger = require('winston');
 var auth = require('./auth.json');
 var RaidEvent = require('./raidevent.js').RaidEvent;
+var IntegrationTests = require('./integrationTests.js')
 
 // Configure logger settings
 logger.remove(logger.transports.Console);
@@ -165,6 +166,13 @@ bot.on('messageCreate', function (message) {
           break;
         }
         processSet(message, channelID, cmdUser, args)
+      break;
+      case 'doTests':
+        if (!isPrivateMessage) {
+          break;
+        }
+        var test = new IntegrationTests(bot)
+        test.start().catch(logCatch)
       break;
     }
   }
