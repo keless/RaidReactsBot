@@ -121,7 +121,6 @@ bot.on('messageCreate', function (message) {
   var channelID = message.channel.id
   var isPrivateMessage = (message.channel.type == 1)
   var cmdUser = message.author
-  var isBotMaster = false;
 
   if (message.content.substring(0, 1) == '!') {
     var args = message.content.substring(1).split(' ');

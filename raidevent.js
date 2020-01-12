@@ -24,7 +24,7 @@ class RaidEvent {
     }
 
     if (title) {
-      //xxx todo: remove this, testing porpoises only 
+      // testing porpoises only 
       //this._testFakeInit()
     }
     
