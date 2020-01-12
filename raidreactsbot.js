@@ -57,23 +57,12 @@ var getRoleIDForNameInGuild = function (guild, roleName) {
   return null
 }
 
+//xxx TODO: add the ability to change the title message
 var processSet = function (cmdMessage, channelID, cmdUser, args) {
   if (args.length < 3) {
     // not enough arguments
     cmdUser.getDMChannel().then((dmChannel) => {
       dmChannel.createMessage("not enough params-  !add messageID name role").catch(logCatch)
-      cmdMessage.delete("send error response")
-    }).catch(logCatch)
-    return;
-  }
-
-  var raidEventMessageID = args[0];
-  var charName = args[1];
-  var emojiRole = args[2];
-
-  if (!RaidEvent.custom_emojis.includes(emojiRole)) {
-    cmdUser.getDMChannel().then((dmChannel) => {
-      dmChannel.createMessage("Invalid role: " + emojiRole + "\nSelect from: " + RaidEvent.custom_emojis.join(', ')).catch(logCatch)
       cmdMessage.delete("send error response")
     }).catch(logCatch)
     return;
@@ -91,6 +80,7 @@ var processSet = function (cmdMessage, channelID, cmdUser, args) {
     return;
   }
 
+  var raidEventMessageID = args[0]
   // find embed for raidEventMessageID
   bot.getMessage(channelID, raidEventMessageID).then((message)=>{
     if (message.embeds.length <= 0) {
@@ -100,12 +90,35 @@ var processSet = function (cmdMessage, channelID, cmdUser, args) {
     var raidEmbed = message.embeds[0]
     var raidEvent = new RaidEvent(guild)
     raidEvent.parseFromEmbed(raidEmbed, message)
-    var added = raidEvent.performAdd(charName, emojiRole)
 
-    cmdUser.getDMChannel().then((dmChannel) => {
-      dmChannel.createMessage("" + (added ? "added " : "removed ") + charName + " as " + emojiRole).catch(logCatch)
-      cmdMessage.delete("handled message")
-    }).catch(logCatch)
+    // perform set title, or set char signup
+    if (args[1] == "title") {
+      var newTitle = args[2]
+  
+      raidEvent.updateTitle(newTitle)
+
+      cmdUser.getDMChannel().then((dmChannel) => {
+        dmChannel.createMessage('updated title to ' + newTitle).catch(logCatch)
+        cmdMessage.delete("handled message")
+      }).catch(logCatch) // cmdUser.getDMChannel
+    } else {
+      var charName = args[1]
+      var emojiRole = args[2]
+      if (!RaidEvent.custom_emojis.includes(emojiRole)) {
+        cmdUser.getDMChannel().then((dmChannel) => {
+          dmChannel.createMessage("Invalid role: " + emojiRole + "\nSelect from: " + RaidEvent.custom_emojis.join(', ')).catch(logCatch)
+          cmdMessage.delete("send error response")
+        }).catch(logCatch) // cmdUser.getDMChannel
+        return;
+      }
+
+      var added = raidEvent.performAdd(charName, emojiRole)
+  
+      cmdUser.getDMChannel().then((dmChannel) => {
+        dmChannel.createMessage("" + (added ? "added " : "removed ") + charName + " as " + emojiRole).catch(logCatch)
+        cmdMessage.delete("handled message")
+      }).catch(logCatch) // cmdUser.getDMChannel
+    } // if-else: title / charName
   }).catch((error) => {
     // couldnt find the RaidEvent embed
     cmdUser.getDMChannel().then((dmChannel) => {

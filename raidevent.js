@@ -191,6 +191,13 @@ class RaidEvent {
     return !unsignup
   }
 
+  updateTitle(title) {
+    this.title = title
+
+    // update embed
+    this.message.edit({ embed: this.renderToEmbed() }).catch(logCatch)
+  }
+
   handleAddedReact(emoji, user) {
     if (!this.message) {
       logger.error("por que no tengo message?")
