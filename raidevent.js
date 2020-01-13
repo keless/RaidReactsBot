@@ -109,29 +109,23 @@ class RaidEvent {
     var isMC = (this.title.indexOf("MC") != -1 || this.title.indexOf("Molt") != -1)
     embed.thumbnail = isMC ? RaidEvent.thumbnails.mc : RaidEvent.thumbnails.ony
     embed.color = isMC ? 0xF5A623 : 0x000000
-
-    //embed.url = "javascript:(function(){ alert('test') })();"
-
     embed.fields = []
 
     //NOTE: 25 fields max
-    // 1-4 'breakdowns'
-    // 5 - new line (empty field)
-    // 6 - 13 'class lists'
     var roles = this.getGroupedSignups()
  
-    embed.fields.push({ name: "Tanks", value: roles.tanks.length, inline: true})
-    embed.fields.push({ name: "Healers", value: roles.healers.length, inline: true})
-    embed.fields.push({ name: "DPS (m/r)", value: roles.melee.length + " / " + roles.ranged.length, inline: true})
-    embed.fields.push({ name: "Total", value: roles.all.length, inline: true })
-
-    embed.fields.push({ name: RaidEvent.EMPTY_CHAR, value: RaidEvent.EMPTY_CHAR, inline: false}) //new line
+    var lblTotalsTitle = "Totals"
+    var arrTotals = [ "Tanks: " + roles.tanks.length, 
+                      "Healers: " + roles.healers.length, 
+                      "Melee: " + roles.melee.length, 
+                      "Ranged: " + roles.ranged.length, 
+                      "Total: " + roles.all.length]
+    var lblTotalsValue = arrTotals.join (" - ")
+    embed.fields.push({ name: lblTotalsTitle, value: lblTotalsValue, inline: false})
 
     for (var role of RaidEvent.custom_emojis) {
       embed.fields.push(this._fieldForRole(role))
     }
-
-    //embed.footer = { text: '[export](javascript:alert("test"))' }
 
     return embed
   }
@@ -164,7 +158,6 @@ class RaidEvent {
   performAdd(charName, emojiRole) {
     // ensure charName is not already signed up anywhere
     var unsignup = false
-    var all = this.getGroupedSignups()
     for (var role of RaidEvent.custom_emojis) {
       if (this.signups[role].includes(charName)) {
         if (role == emojiRole) {
