@@ -3,6 +3,8 @@ var logger = require('winston');
 var auth = require('./auth.json');
 var RaidEvent = require('./raidevent.js').RaidEvent;
 
+var VERSION_STR = "1.0.1"
+
 // Configure logger settings
 logger.remove(logger.transports.Console);
 logger.add(new logger.transports.Console, {
@@ -142,10 +144,6 @@ bot.on('messageCreate', function (message) {
     args = args.splice(1);
     switch(cmd) {
       case 'ping':
-        // public response:
-        //bot.createMessage(channelID, 'Pong!').catch((error)=> { logger.error(error) });
-
-        // private response:
         cmdUser.getDMChannel().then((dmChannel)=>{
           dmChannel.createMessage('Pong!').then(()=>{
             logger.info("sent pong response")
@@ -177,6 +175,15 @@ bot.on('messageCreate', function (message) {
           break;
         }
         processSet(message, channelID, cmdUser, args)
+      break;
+      case 'version': //fallthru
+      case 'ver':
+        if (!isPrivateMessage) {
+          break;
+        }
+        cmdUser.getDMChannel().then((dmChannel) => {
+          dmChannel.createMessage(VERSION_STR).catch(logCatch);
+        }).catch(logCatch)
       break;
     }
   }
