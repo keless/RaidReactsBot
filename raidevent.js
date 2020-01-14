@@ -45,7 +45,7 @@ class RaidEvent {
     this.title = embed.title
     this.message = message
 
-    var firstFieldIdx = 5
+    var firstFieldIdx = 1
     for (var i = firstFieldIdx; i < embed.fields.length; i++) {
       var field = embed.fields[i]
 
