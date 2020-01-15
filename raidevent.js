@@ -1,9 +1,5 @@
 var fs = require('fs'); // for installing custom emojis to server
-var logger = require('winston')
-
-var logCatch = function (error) {
-  logger.error(error.message || error)
-}
+var RaidReactsFramework = require('./raidreactsFramework.js')
 
 var getEmoji = function (emoji, guild) {
   return guild.emojis.find((gEmo) => { return gEmo.name == emoji })
@@ -179,7 +175,7 @@ class RaidEvent {
     }
 
     // update embed
-    this.message.edit({ embed: this.renderToEmbed() }).catch(logCatch)
+    this.message.edit({ embed: this.renderToEmbed() }).catch(RaidReactsFramework.logCatch)
 
     return !unsignup
   }
@@ -188,7 +184,7 @@ class RaidEvent {
     this.title = title
 
     // update embed
-    this.message.edit({ embed: this.renderToEmbed() }).catch(logCatch)
+    this.message.edit({ embed: this.renderToEmbed() }).catch(RaidReactsFramework.logCatch)
   }
 
   handleAddedReact(emoji, user) {
@@ -220,7 +216,7 @@ class RaidEvent {
       }
 
       dmChannel.createMessage(rosterStr)
-    }).catch(logCatch)
+    }).catch(RaidReactsFramework.logCatch)
   }
 
   _rosterLinesForRole(role) {
@@ -326,9 +322,9 @@ RaidEvent.roleToNiceName = {
 RaidEvent.addTemplateReactions = function (message, guild) {
   for (var emoji of RaidEvent.custom_emojis) {
     var customEmoji = getEmoji(emoji, guild)
-    message.addReaction(customEmoji.name + ":" + customEmoji.id).catch(logCatch)
+    message.addReaction(customEmoji.name + ":" + customEmoji.id).catch(RaidReactsFramework.logCatch)
   }
-  message.addReaction("🦎").catch(logCatch)  // this react will be used to trigger copying the roster
+  message.addReaction("🦎").catch(RaidReactsFramework.logCatch)  // this react will be used to trigger copying the roster
 }
 
 RaidEvent.EMPTY_CHAR = "\u200B"
@@ -343,8 +339,8 @@ function base64_encode(file) {
 RaidEvent.InstallEmojis = function (guild) {
   for (var emoji of RaidEvent.custom_emojis) {
     var base64str = base64_encode("reacts/signup_" + emoji + ".png")
-    guild.createEmoji({ name: emoji, image: "data:image/png;base64," + base64str }).catch(logCatch)
+    guild.createEmoji({ name: emoji, image: "data:image/png;base64," + base64str }).catch(RaidReactsFramework.logCatch)
   }
 }
 
-module.exports = { RaidEvent: RaidEvent }  //note: ES6 Module format
+module.exports = RaidEvent

@@ -1,4 +1,5 @@
 var logger = require('winston')
+var RaidReactsFramework = require('./raidreactsFramework.js')
 
 var emote_map = {
   ":dagger:": "Melee",
@@ -15,10 +16,6 @@ var emote_map = {
   "⚔️": "Melee",
   "🧙": "Ranged",
   "🏹": "Ranged"
-}
-
-var logCatch = function (error) {
-  logger.error(error.message || error)
 }
 
 var processCopy = function (client, message, channelID, cmdUser, args) {
@@ -88,24 +85,24 @@ var processCopy = function (client, message, channelID, cmdUser, args) {
             // we have all results now, map emojis to roles
             logger.info("send message '" + strResult + "'")
             // public response: 
-            //client.createMessage(channelID, strResult).catch(logCatch);
+            //client.createMessage(channelID, strResult).catch(RaidReactsFramework.logCatch);
 
             // private response:
-            dmChannel.createMessage(strResult).catch(logCatch);
-          }).catch(logCatch) // Promise.all
+            dmChannel.createMessage(strResult).catch(RaidReactsFramework.logCatch);
+          }).catch(RaidReactsFramework.logCatch) // Promise.all
 
         } else {
           logger.error("No reacts found for '" + searchString + "'")
-          dmChannel.createMessage("No reacts found for '" + searchString + "'").catch(logCatch)
+          dmChannel.createMessage("No reacts found for '" + searchString + "'").catch(RaidReactsFramework.logCatch)
         }
       } else {
         logger.error("No message found for '" + searchString + "'")
-        dmChannel.createMessage("No message found for '" + searchString + "'").catch(logCatch)
+        dmChannel.createMessage("No message found for '" + searchString + "'").catch(RaidReactsFramework.logCatch)
       }
-    }).catch(logCatch) // client.getMessages
+    }).catch(RaidReactsFramework.logCatch) // client.getMessages
 
     message.delete("processed command")
-  }).catch(logCatch) // cmdUser.getDMChannel
+  }).catch(RaidReactsFramework.logCatch) // cmdUser.getDMChannel
 }
 
 module.exports = processCopy

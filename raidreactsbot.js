@@ -1,9 +1,14 @@
 var Eris = require('eris');
 var logger = require('winston');
 var auth = require('./auth.json');
-var RaidEvent = require('./raidevent.js').RaidEvent;
+var RaidReactsFramework = require('./raidreactsFramework.js')
+var RaidEvent = require('./raidevent.js');
 
-var VERSION_STR = "1.0.2"
+
+var VERSION_STR = "1.1.0"
+// 1.1.0 - implemented integration tests; use !doTests
+// 1.0.2 - fix bug that dropped first 4 signup categories
+// 1.0.1 - added !ver command
 
 // Configure logger settings
 logger.remove(logger.transports.Console);
@@ -11,17 +16,15 @@ logger.add(new logger.transports.Console, {
     colorize: true
 });
 logger.level = 'debug';
+
 // Initialize Discord Bot
 var bot = new Eris(auth.token);
 bot.on('ready', function (evt) {
-    logger.info('Connected');
-    logger.info('Logged in as: ');
-    logger.info(bot.user.username + ' - (' + bot.user.id + ')');
+  RaidReactsFramework.initialize(bot)
+  logger.info('Connected');
+  logger.info('Logged in as: ');
+  logger.info(bot.user.username + ' - (' + bot.user.id + ')');
 });
-
-var logCatch = function (error) {
-  logger.error(error.message || error) 
-}
 
 var processCopy = require('./copyReacts.js')
 
@@ -36,8 +39,8 @@ var processCreate = function (message, channelID, cmdUser, args) {
     // set up the example emojis
     RaidEvent.addTemplateReactions(raidEventMessage, guild)
 
-    message.delete().catch(logCatch)
-  }).catch(logCatch);
+    message.delete().catch(RaidReactsFramework.logCatch)
+  }).catch(RaidReactsFramework.logCatch);
 }
 
 var getMemberForUserInGuild = function (guild, user) {
@@ -64,9 +67,9 @@ var processSet = function (cmdMessage, channelID, cmdUser, args) {
   if (args.length < 3) {
     // not enough arguments
     cmdUser.getDMChannel().then((dmChannel) => {
-      dmChannel.createMessage("not enough params-  !add messageID name role").catch(logCatch)
+      dmChannel.createMessage("not enough params-  !add messageID name role").catch(RaidReactsFramework.logCatch)
       cmdMessage.delete("send error response")
-    }).catch(logCatch)
+    }).catch(RaidReactsFramework.logCatch)
     return;
   }
 
@@ -100,33 +103,33 @@ var processSet = function (cmdMessage, channelID, cmdUser, args) {
       raidEvent.updateTitle(newTitle)
 
       cmdUser.getDMChannel().then((dmChannel) => {
-        dmChannel.createMessage('updated title to ' + newTitle).catch(logCatch)
+        dmChannel.createMessage('updated title to ' + newTitle).catch(RaidReactsFramework.logCatch)
         cmdMessage.delete("handled message")
-      }).catch(logCatch) // cmdUser.getDMChannel
+      }).catch(RaidReactsFramework.logCatch) // cmdUser.getDMChannel
     } else {
       var charName = args[1]
       var emojiRole = args[2]
       if (!RaidEvent.custom_emojis.includes(emojiRole)) {
         cmdUser.getDMChannel().then((dmChannel) => {
-          dmChannel.createMessage("Invalid role: " + emojiRole + "\nSelect from: " + RaidEvent.custom_emojis.join(', ')).catch(logCatch)
+          dmChannel.createMessage("Invalid role: " + emojiRole + "\nSelect from: " + RaidEvent.custom_emojis.join(', ')).catch(RaidReactsFramework.logCatch)
           cmdMessage.delete("send error response")
-        }).catch(logCatch) // cmdUser.getDMChannel
+        }).catch(RaidReactsFramework.logCatch) // cmdUser.getDMChannel
         return;
       }
 
       var added = raidEvent.performAdd(charName, emojiRole)
   
       cmdUser.getDMChannel().then((dmChannel) => {
-        dmChannel.createMessage("" + (added ? "added " : "removed ") + charName + " as " + emojiRole).catch(logCatch)
+        dmChannel.createMessage("" + (added ? "added " : "removed ") + charName + " as " + emojiRole).catch(RaidReactsFramework.logCatch)
         cmdMessage.delete("handled message")
-      }).catch(logCatch) // cmdUser.getDMChannel
+      }).catch(RaidReactsFramework.logCatch) // cmdUser.getDMChannel
     } // if-else: title / charName
   }).catch((error) => {
     // couldnt find the RaidEvent embed
     cmdUser.getDMChannel().then((dmChannel) => {
-      dmChannel.createMessage("Could not find RaidEvent for MessageID " + raidEventMessageID + "\nMake sure you used the correct MessageID").catch(logCatch)
+      dmChannel.createMessage("Could not find RaidEvent for MessageID " + raidEventMessageID + "\nMake sure you used the correct MessageID").catch(RaidReactsFramework.logCatch)
       cmdMessage.delete("send error response")
-    }).catch(logCatch)
+    }).catch(RaidReactsFramework.logCatch)
   });
 }
 
@@ -148,8 +151,8 @@ bot.on('messageCreate', function (message) {
           dmChannel.createMessage('Pong!').then(()=>{
             logger.info("sent pong response")
             message.delete("bot responded")
-          }).catch(logCatch);
-        }).catch(logCatch)
+          }).catch(RaidReactsFramework.logCatch);
+        }).catch(RaidReactsFramework.logCatch)
       break;
       case 'copy':
         if (isPrivateMessage) {
@@ -182,9 +185,17 @@ bot.on('messageCreate', function (message) {
           break;
         }
         cmdUser.getDMChannel().then((dmChannel) => {
-          dmChannel.createMessage(VERSION_STR).catch(logCatch);
-        }).catch(logCatch)
+          dmChannel.createMessage(VERSION_STR).catch(RaidReactsFramework.logCatch);
+        }).catch(RaidReactsFramework.logCatch)
       break;
+      case 'doTests':
+        if (isPrivateMessage) {
+          break;
+        }
+        RaidReactsFramework.startIntegrationTests(bot, message.channel.guild, cmdUser).catch((error)=>{
+          logger.error(error.message || error)
+        })
+        break;
     }
   }
 });
@@ -220,7 +231,7 @@ bot.on('messageReactionAdd', (partialMessageData, emojiObj, userID) => {
       // now reset the react (remove the userID's react)
       message.removeReaction(emojiObj.name + ":" + emojiObj.id, userID)
     }
-  }).catch(logCatch)
+  }).catch(RaidReactsFramework.logCatch)
 })
 
 bot.connect()
