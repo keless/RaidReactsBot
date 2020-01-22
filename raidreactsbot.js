@@ -4,11 +4,12 @@ var auth = require('./auth.json');
 var RaidReactsFramework = require('./raidreactsFramework.js')
 var RaidEvent = require('./raidevent.js');
 
-
 var VERSION_STR = "1.1.0"
 // 1.1.0 - implemented integration tests; use !doTests
+// 1.0.3b - option to limit categories for unpopular roles
 // 1.0.2 - fix bug that dropped first 4 signup categories
 // 1.0.1 - added !ver command
+
 
 // Configure logger settings
 logger.remove(logger.transports.Console);
