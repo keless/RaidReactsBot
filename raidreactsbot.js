@@ -148,12 +148,12 @@ bot.on('messageCreate', function (message) {
     args = args.splice(1);
     switch(cmd) {
       case 'ping':
-        cmdUser.getDMChannel().then((dmChannel)=>{
-          dmChannel.createMessage('Pong!').then(()=>{
-            logger.info("sent pong response")
-            message.delete("bot responded")
-          }).catch(RaidReactsFramework.logCatch);
-        }).catch(RaidReactsFramework.logCatch)
+        RaidReactsFramework.sendPM(cmdUser, 'Pong!').then(() => {
+          logger.info("sent pong response")
+          if (!isPrivateMessage) {
+            message.delete("bot responded").catch(RaidReactsFramework.logCatch)
+          }
+        }).catch(RaidReactsFramework.logCatch);
       break;
       case 'copy':
         if (isPrivateMessage) {
@@ -185,15 +185,14 @@ bot.on('messageCreate', function (message) {
         if (!isPrivateMessage) {
           break;
         }
-        cmdUser.getDMChannel().then((dmChannel) => {
-          dmChannel.createMessage(VERSION_STR).catch(RaidReactsFramework.logCatch);
-        }).catch(RaidReactsFramework.logCatch)
+        RaidReactsFramework.sendPM(cmdUser, VERSION_STR).catch(RaidReactsFramework.logCatch)
       break;
       case 'doTests':
         if (isPrivateMessage) {
           break;
         }
         RaidReactsFramework.startIntegrationTests(bot, message.channel.guild, cmdUser).catch((error)=>{
+          console.log("xxx unit tests threw error")
           logger.error(error.message || error)
         })
         break;

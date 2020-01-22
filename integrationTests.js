@@ -9,6 +9,15 @@ function uuidv4() {
   });
 }
 
+class DeferredPromise {
+  constructor() {
+    this.promise = new Promise((resolve, reject) => {
+      this.reject = reject
+      this.resolve = resolve
+    })
+  }
+}
+
 class IntegrationTests {
   constructor(client, guild, user) {
     this.reportToUser = user
@@ -16,6 +25,10 @@ class IntegrationTests {
     this.guild = guild
     this.channel = null
     this.tests = []
+
+    this.awaitingPM = null
+
+    this.rejections = []
   }
 
   /**
@@ -25,18 +38,24 @@ class IntegrationTests {
     this.tests.push(this.testCmdCopy.bind(this))
     this.tests.push(this.testCreateAndDeserializeEmbed.bind(this))
 
+    console.log("rrbit - call setup()")
     return this.setup().then(()=>{
       console.log("rrbit - start tests")
       return this.doTests()
     }).then(()=>{
       this.reportToUser.getDMChannel().then((dmChannel) => {
-        dmChannel.createMessage("finished running tests - all successful")
+        if (this.rejections.length > 0) {
+          dmChannel.createMessage("some tests failed: \n" + this.rejections.join("\n"))
+        } else {
+          dmChannel.createMessage("finished running tests - all successful")
+        }
       }).catch((error)=>{ logger.error(error.message || error) })  //note: during integration test, this _should_ log
     }).catch((error)=>{
       this.reportToUser.getDMChannel().then((dmChannel) => {
-        dmChannel.createMessage(error)
+        dmChannel.createMessage(error).catch((error) => { logger.error(error.message || error) })
       }).catch((error) => { logger.error(error.message || error) }) //note: during integration test, this _should_ log
-    }).finally(()=>{
+      return Promise.resolve()
+    }).then(()=>{ // poor man's finally()?
       console.log("rrbit - finished running tests, begining teardown")
       return this.teardown()
     })
@@ -67,19 +86,30 @@ class IntegrationTests {
    * @returns Promise
    */
   testCmdCopy() {
-    console.log("rribt - testCmdCopy()")
+    console.log("rrbit - testCmdCopy()")
 
     var messageText = "testCopy message + reacts"
 
     // create a message with a react
+    console.log("rrbit - create test message")
     return this.client.createMessage(this.channel.id, messageText).then((message)=>{
       //add react
+      console.log("rrbit - add reaction to created message")
       return message.addReaction("⚔️").then(()=>{
         // run !copy
         //xxx TODO: fix bug- !copy will result in the bot trying to PM results, but since bot wrote !copy it cant PM itself..
+        console.log("rrbit - create the !copy command message")
         return this.client.createMessage(this.channel.id, "!copy " + messageText).then((message)=>{
-          // now we need to somehow wait for and recieve a private message?!
-          return Promise.resolve()
+          // now we need to wait for and recieve a private message, and test the result
+          this.awaitingPM = new DeferredPromise()
+          return this.awaitingPM.promise.then((msg) => {
+            //console.log("rrbit got PM: " + msg)
+            if (msg == "!copy testCopy message + reacts\nRaidReactsApp_Dev Melee\n") {
+              return Promise.resolve("testCmdCopy - passed")
+            } else {
+              return Promise.reject("testCmdCopy - got incorrect pm " + msg)
+            }
+          })
         })
       })
     })
@@ -95,7 +125,9 @@ class IntegrationTests {
     //3) read the embed and deserialize into a RaidEvent
     //4) compare the new RaidEvent to the original RaidEvent for equivalence
     //xxx WIP todo
+    
     return Promise.resolve()
+    //return Promise.reject("test second reject")
   }
 
   /**
@@ -106,8 +138,7 @@ class IntegrationTests {
 
     // destroy server
     console.log("rrbit - remove channel " + this.channel.name + " from guild " + this.guild.name)
-    //xxx test leave it up for now: return this.client.deleteChannel(this.channel.id, "testing finished")
-    return Promise.resolve()
+    return this.client.deleteChannel(this.channel.id, "testing finished")
   }
 }
 
