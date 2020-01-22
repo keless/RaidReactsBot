@@ -3,7 +3,7 @@ var logger = require('winston');
 var auth = require('./auth.json');
 var RaidEvent = require('./raidevent.js').RaidEvent;
 
-var VERSION_STR = "1.0.3"
+var VERSION_STR = "1.0.3b"
 
 // Configure logger settings
 logger.remove(logger.transports.Console);

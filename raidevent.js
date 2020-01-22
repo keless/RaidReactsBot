@@ -32,10 +32,6 @@ class RaidEvent {
     
   }
 
-  _emojiList() {
-    return DISABLE_MEME_SPECS ? RaidEvent.custom_emojis_non_meme : RaidEvent.custom_emojis
-  }
-
   _testFakeInit() {
     this.signups["rogue"] = ["Loquilla", "Messanna", "Roguegath"]
     this.signups["prot_war"] = ["Bheshad", "Unmade", "Exitus"]
@@ -129,7 +125,7 @@ class RaidEvent {
     var lblTotalsValue = arrTotals.join (" - ")
     embed.fields.push({ name: lblTotalsTitle, value: lblTotalsValue, inline: false})
 
-    for (var role of this._emojiList()) {
+    for (var role of RaidEvent._emojiList()) {
       embed.fields.push(this._fieldForRole(role))
     }
 
@@ -164,7 +160,7 @@ class RaidEvent {
   performAdd(charName, emojiRole) {
     // ensure charName is not already signed up anywhere
     var unsignup = false
-    for (var role of this._emojiList()) {
+    for (var role of RaidEvent._emojiList()) {
       if (this.signups[role].includes(charName)) {
         if (role == emojiRole) {
           // interpret action as removing signup
@@ -202,7 +198,7 @@ class RaidEvent {
       logger.error("por que no tengo message?")
       return // cant update embed if we dont know what message it is on (this shouldnt happen)
     }
-    if (!this._emojiList().includes(emoji.name)) {
+    if (!RaidEvent._emojiList().includes(emoji.name)) {
       logger.error("ignoring invalid react " + emoji.name)
       return // ignore unknown react
     }
@@ -242,6 +238,10 @@ class RaidEvent {
 
     return str
   }
+}
+
+RaidEvent._emojiList = function () {
+  return DISABLE_MEME_SPECS ? RaidEvent.custom_emojis_non_meme : RaidEvent.custom_emojis
 }
 
 RaidEvent.thumbnails = {
@@ -355,7 +355,7 @@ RaidEvent.roleToNiceName = {
 }
 
 RaidEvent.addTemplateReactions = function (message, guild) {
-  for (var emoji of RaidEvent.custom_emojis) {
+  for (var emoji of RaidEvent._emojiList()) {
     var customEmoji = getEmoji(emoji, guild)
     message.addReaction(customEmoji.name + ":" + customEmoji.id).catch(logCatch)
   }
