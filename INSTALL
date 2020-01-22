@@ -1,0 +1,9 @@
+To install this bot:
+Make sure docker is installed
+
+sudo docker build .
+sudo ./installbot.sh
+
+If you need to update the bot:
+sudo docker build .
+sudo ./restartbot.sh

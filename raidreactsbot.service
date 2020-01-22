@@ -1,0 +1,7 @@
+[Unit]
+Description=RaidReactsBot
+
+[Service]
+ExecStart=/snap/bin/docker run raidreactsbot:latest
+ExecStop=/bin/kill -9 $MAINPID
+Restart=on-failure
